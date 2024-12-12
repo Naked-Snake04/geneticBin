@@ -29,6 +29,7 @@ public class Main {
         for (int i = 0; i < NUM_ITEMS; i++) {
             items.add(random.nextInt(MAX_WEIGHT) + 1);
         }
+        System.out.println("Список предметов: " + items);
         return items;
     }
 
@@ -39,22 +40,28 @@ public class Main {
         for (int i = 0; i < POPULATION_SIZE; i++) {
             population.add(generateSolution(items));
         }
-
+        System.out.println("Вся популяция: " + population);
         for (int generation = 0; generation < NUM_GENERATIONS ; generation++) {
             //Селекция и создание нового поколения
             List<List<Integer>> newPopulation = new ArrayList<>();
             for (int i = 0; i < POPULATION_SIZE; i++) {
                 List<Integer> parent1 = selection(population);
                 List<Integer> parent2 = selection(population);
+                System.out.println("Отобранные родители: " + parent1 + ", " + parent2);
                 List<Integer> child = crossover(parent1, parent2);
                 mutate(child);
+                System.out.println("Ребёнок после кроссовера родителей и мутации: " + child);
+                // добавляем ребёнка в новое поколение
                 newPopulation.add(child);
             }
 
+            // Старое поколение умирает, появляется новое
             population = newPopulation;
+            System.out.println("Новое поколение: " + population);
 
             // Находим наилучшее решение в текущей популяции
             List<Integer> bestSolution = population.stream().min(Comparator.comparingInt(Main::fitness)).orElse(null);
+            assert bestSolution != null;
             int bestFitness = fitness(bestSolution);
 
             System.out.println("Поколение " + generation + ": лучшее решение требует " + bestFitness + " контейнеров");
@@ -103,9 +110,12 @@ public class Main {
 
     // Отбор родителей
     private static List<Integer> selection(List<List<Integer>> population) {
-        List<Integer> parent1 = population.get(random.nextInt(POPULATION_SIZE));
-        List<Integer> parent2 = population.get(random.nextInt(POPULATION_SIZE));
-        return fitness(parent1) < fitness(parent2) ? parent1 : parent2;
+        List<List<Integer>> tournament = new ArrayList<>();
+        int tournamentSize = 5;
+        for (int i = 0; i < tournamentSize; i++) {
+            tournament.add(population.get(random.nextInt(population.size())));
+        }
+        return tournament.stream().min(Comparator.comparingInt(Main::fitness)).orElseThrow();
     }
 
     // Генерация случайного решения
